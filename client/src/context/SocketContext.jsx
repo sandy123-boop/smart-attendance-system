@@ -19,7 +19,11 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const socket = ioClient('/', {
+    // In production VITE_SERVER_URL must point to the Render backend
+    // e.g. https://your-app.onrender.com
+    // In local dev '/' works because the Vite proxy forwards socket.io traffic
+    const serverUrl = import.meta.env.VITE_SERVER_URL || '/';
+    const socket = ioClient(serverUrl, {
       auth: { token: auth.token },
       transports: ['websocket', 'polling'],
     });

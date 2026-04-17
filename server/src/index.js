@@ -23,6 +23,8 @@ function getLanIP() {
 }
 
 const lanIP = getLanIP();
+
+// Build allowed origins from env vars + local dev defaults
 const allowedOrigins = [
   'http://localhost:' + CLIENT_PORT,
   'https://localhost:' + CLIENT_PORT,
@@ -30,10 +32,27 @@ const allowedOrigins = [
   `https://${lanIP}:${CLIENT_PORT}`,
 ];
 
+// Add CLIENT_URL from env (e.g. https://your-app.vercel.app)
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL.trim());
+}
+
+// Add any extra comma-separated origins via CORS_ORIGINS env var
+if (process.env.CORS_ORIGINS) {
+  process.env.CORS_ORIGINS.split(',').forEach((o) => {
+    const trimmed = o.trim();
+    if (trimmed) allowedOrigins.push(trimmed);
+  });
+}
+
+console.log('[cors] allowed origins:', allowedOrigins);
+
 app.use(
   cors({
     origin: (origin, cb) => {
+      // Allow server-to-server calls (no origin) and listed origins
       if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      console.warn('[cors] blocked origin:', origin);
       cb(null, false);
     },
     credentials: true,
